@@ -1,0 +1,11 @@
+<library path="lib/libjog_twist">
+  
+  <class name="jog_twist/JogTwistPanel"
+         type="jog_twist::JogTwistPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget for jog interface
+    </description>
+  </class>
+
+</library>

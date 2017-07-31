@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <name>jog_twist</name>
+  <version>0.0.0</version>
+  <description>The jog_twist package</description>
+  <maintainer email="ryosuke.tajima@opensource-robotics.tokyo.jp">Ryosuke Tajima</maintainer>
+  <license>BSD</license>
+  <author email="ryosuke.tajima@opensource-robotics.tokyo.jp">Ryosuke Tajima</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>rviz</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>rviz</run_depend>
+
+  <export>
+    <rviz plugin="${prefix}/plugin_description.xml"/>
+  </export>
+</package>
