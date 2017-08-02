@@ -79,6 +79,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set_target_properties(jog_twist PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -z defs")
 endif()
 
+add_executable(jog_twist_node src/jog_twist_node.cpp)
+target_link_libraries(jog_twist_node ${catkin_LIBRARIES})
+
 install(FILES plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 

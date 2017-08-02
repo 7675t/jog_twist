@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find tra1_bringup)/launch/tra1_bringup.launch">
+    <arg name="simulation" value="true"/>
+    <arg name="debug" value="true"/>
+  </include>
+  <include file="$(find tra1_bringup)/launch/tra1_moveit.launch"/>
+  <node name="jog_twist_node" pkg="jog_twist" type="jog_twist_node"/>
+</launch>
