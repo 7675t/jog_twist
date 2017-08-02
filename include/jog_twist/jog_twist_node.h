@@ -25,6 +25,8 @@ public:
    * @breif: Default constructor for JogTwistNode Class.
    */
   JogTwistNode(std::string move_group_name);
+  void cmd_vel_cb(geometry_msgs::TwistStampedConstPtr msg);
+  void joint_state_cb(sensor_msgs::JointStateConstPtr msg);
   
 protected:
   ros::NodeHandle nh_;
@@ -37,8 +39,6 @@ protected:
   geometry_msgs::PoseStamped pose_stamped_;
   sensor_msgs::JointState ref_joint_state_;
   
-  void cmd_vel_cb(geometry_msgs::TwistStampedConstPtr msg);
-  void joint_state_cb(sensor_msgs::JointStateConstPtr msg);
 };
 
 } // namespace jog_twist

@@ -29,6 +29,10 @@ class JogTwistPanel: public rviz::Panel
     void updateFrame();
     void respondFrame(int index);
     void respondAxis(int index);
+    void respondSliderChanged(int value);
+    void respondSliderReleased();
+    void publish();
+    
   protected:
     QComboBox* frame_cbox_;
     QComboBox* axis_cbox_;
@@ -39,6 +43,8 @@ class JogTwistPanel: public rviz::Panel
     std::string frame_id_;
     std::string axis_id_;
     boost::mutex mutex_;
+    double jog_value_;
+    ros::Publisher twist_pub_;
 
     void initFrameComboBox();
     void initAxisComboBox();

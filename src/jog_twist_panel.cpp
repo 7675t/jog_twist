@@ -4,6 +4,7 @@
 #include <rviz/visualization_manager.h>
 #include <ros/package.h>
 #include <tf/transform_listener.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSignalMapper>
@@ -13,7 +14,7 @@ namespace jog_twist
 {
 
 JogTwistPanel::JogTwistPanel(QWidget* parent)
-  : rviz::Panel(parent)
+  : rviz::Panel(parent), jog_value_(0)
 {
   QHBoxLayout* frame_layout = new QHBoxLayout;
   frame_layout->addWidget( new QLabel( "Frame:" ));
@@ -28,6 +29,24 @@ JogTwistPanel::JogTwistPanel(QWidget* parent)
   QHBoxLayout* jog_layout = new QHBoxLayout;
   jog_layout->addWidget( new QLabel( "Jog:" ));
   jog_slider_ = new QSlider(Qt::Horizontal);
+  jog_slider_->setTickPosition(QSlider::TicksBelow);
+  jog_slider_->setTickInterval(500);
+  jog_slider_->setMinimum(-1000);
+  jog_slider_->setMaximum( 1000);
+  jog_slider_->setTracking(true);
+  // How can I change the slider style more properly??
+  jog_slider_->setStyleSheet("QSlider::handle {"
+                             "background: white;"
+                             "border: 3px solid black;"
+                             "width: 60px;"
+                             "margin: -30px 0;"
+                             "} "
+                             "QSlider::sub-page {"
+                             "background: rgb(164, 192, 2);"
+                             "} "
+                             "QSlider::add-page {"
+                             "background: rgb(223, 70, 70);"
+                             "} ");
   jog_layout->addWidget(jog_slider_);
 
   QHBoxLayout* pos_x_layout = new QHBoxLayout;
@@ -57,12 +76,17 @@ JogTwistPanel::JogTwistPanel(QWidget* parent)
   connect(frame_cbox_, SIGNAL(activated(int)), this, SLOT(respondFrame(int)));
   connect(axis_cbox_, SIGNAL(activated(int)), this, SLOT(respondAxis(int)));
 
+  // Slider
+  connect(jog_slider_, SIGNAL(valueChanged(int)), this, SLOT(respondSliderChanged(int)));
+  connect(jog_slider_, SIGNAL(sliderReleased()), this, SLOT(respondSliderReleased()));
+
   // Timer for update Frame ComboBox
   QTimer* output_timer = new QTimer( this );
-  connect( output_timer, SIGNAL( timeout() ), this, SLOT( updateFrame() ));
-  output_timer->start(10000);
+  connect( output_timer, SIGNAL( timeout() ), this, SLOT( publish() ));
+  output_timer->start(100);
 
-  //twist_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>( "/cmd_vel", 1 );
+  ros::NodeHandle nh;
+  twist_pub_ = nh.advertise<geometry_msgs::TwistStamped>( "/cmd_vel", 1 );
   //pose_sub_ = nh_.subscribe(topic_name, 1, &PieChartDisplay::processMessage, this);
 }
 
@@ -104,6 +128,27 @@ void JogTwistPanel::updateFrame()
     }
     frame_cbox_->addItem(it->c_str());
   }
+}
+
+void JogTwistPanel::publish()
+{
+  // publish
+  geometry_msgs::TwistStamped msg;
+  msg.header.stamp = ros::Time::now();
+  msg.header.frame_id = frame_id_;
+  if (axis_id_ == "x")
+  {
+    msg.twist.linear.x = jog_value_;
+  }
+  if (axis_id_ == "y")
+  {
+    msg.twist.linear.y = jog_value_;
+  }
+  if (axis_id_ == "z")
+  {
+    msg.twist.linear.z = jog_value_;
+  }
+  twist_pub_.publish(msg);
 }  
 
 void JogTwistPanel::respondFrame(int index)
@@ -118,6 +163,17 @@ void JogTwistPanel::respondAxis(int index)
   boost::mutex::scoped_lock lock(mutex_);
   axis_id_ = axis_cbox_->currentText().toStdString();
   ROS_INFO_STREAM("respondAxis: " << axis_id_);
+}
+
+void JogTwistPanel::respondSliderChanged(int value)
+{
+  boost::mutex::scoped_lock lock(mutex_);
+  jog_value_ = value / 1000.0;
+}
+
+void JogTwistPanel::respondSliderReleased()
+{
+  jog_slider_->setValue(0);
 }
 
 void JogTwistPanel::save(rviz::Config config) const
