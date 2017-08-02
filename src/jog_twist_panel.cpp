@@ -32,17 +32,17 @@ JogTwistPanel::JogTwistPanel(QWidget* parent)
 
   QHBoxLayout* pos_x_layout = new QHBoxLayout;
   pos_x_layout->addWidget( new QLabel( "X:" ));
-  pos_x_text_ = new QLCDNumber();
+  pos_x_text_ = makeNumericLabel();
   pos_x_layout->addWidget(pos_x_text_);
 
   QHBoxLayout* pos_y_layout = new QHBoxLayout;
   pos_y_layout->addWidget( new QLabel( "Y:" ));
-  pos_y_text_ = new QLCDNumber();
+  pos_y_text_ = makeNumericLabel();
   pos_y_layout->addWidget(pos_y_text_);
 
   QHBoxLayout* pos_z_layout = new QHBoxLayout;
   pos_z_layout->addWidget( new QLabel( "Z:" ));
-  pos_z_text_ = new QLCDNumber();
+  pos_z_text_ = makeNumericLabel();
   pos_z_layout->addWidget(pos_z_text_);
 
   QVBoxLayout* layout = new QVBoxLayout;
@@ -54,19 +54,38 @@ JogTwistPanel::JogTwistPanel(QWidget* parent)
   layout->addLayout(pos_z_layout);
   setLayout(layout);
 
-  connect(frame_cbox_, SIGNAL(activated()), this, SLOT(respondFrame));
-  connect(axis_cbox_, SIGNAL(activated()), this, SLOT(respondAxis));
+  connect(frame_cbox_, SIGNAL(activated(int)), this, SLOT(respondFrame(int)));
+  connect(axis_cbox_, SIGNAL(activated(int)), this, SLOT(respondAxis(int)));
 
   // Timer for update Frame ComboBox
   QTimer* output_timer = new QTimer( this );
   connect( output_timer, SIGNAL( timeout() ), this, SLOT( updateFrame() ));
-  output_timer->start(10000);  
+  output_timer->start(10000);
+
+  //twist_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>( "/cmd_vel", 1 );
+  //pose_sub_ = nh_.subscribe(topic_name, 1, &PieChartDisplay::processMessage, this);
 }
 
 void JogTwistPanel::onInitialize()
 {
+  connect( vis_manager_, SIGNAL( preUpdate() ), this, SLOT( update() ));  
   updateFrame();
   initAxisComboBox();
+}
+
+void JogTwistPanel::update()
+{
+  tf::TransformListener* tf = vis_manager_->getTFClient();
+  tf::StampedTransform transform;
+  try{
+    tf->lookupTransform(frame_id_, "link_j6", ros::Time(0), transform);
+  }
+  catch (tf::TransformException ex){
+    ROS_ERROR("%s",ex.what());
+  }  
+  fillNumericLabel(pos_x_text_, transform.getOrigin().x());
+  fillNumericLabel(pos_y_text_, transform.getOrigin().y());
+  fillNumericLabel(pos_z_text_, transform.getOrigin().z());
 }
 
 void JogTwistPanel::updateFrame()
@@ -87,16 +106,18 @@ void JogTwistPanel::updateFrame()
   }
 }  
 
-void JogTwistPanel::respondFrame()
+void JogTwistPanel::respondFrame(int index)
 {
   boost::mutex::scoped_lock lock(mutex_);
   frame_id_ = frame_cbox_->currentText().toStdString();
+  ROS_INFO_STREAM("respondFrame: " << frame_id_);
 }
 
-void JogTwistPanel::respondAxis()
+void JogTwistPanel::respondAxis(int index)
 {
   boost::mutex::scoped_lock lock(mutex_);
   axis_id_ = axis_cbox_->currentText().toStdString();
+  ROS_INFO_STREAM("respondAxis: " << axis_id_);
 }
 
 void JogTwistPanel::save(rviz::Config config) const
@@ -114,7 +135,19 @@ void JogTwistPanel::initAxisComboBox()
   axis_cbox_->addItem("x");
   axis_cbox_->addItem("y");
   axis_cbox_->addItem("z");
-}  
+}
+
+QLineEdit* JogTwistPanel::makeNumericLabel()
+{
+  QLineEdit* label = new QLineEdit;
+  label->setReadOnly( true );
+  return label;
+}
+
+void JogTwistPanel::fillNumericLabel( QLineEdit* label, double value )
+{
+  label->setText( QString::number( value, 'f', 2 ));
+}
 
 }  // namespace jog_twist
 

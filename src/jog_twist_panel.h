@@ -25,22 +25,26 @@ class JogTwistPanel: public rviz::Panel
     virtual void save(rviz::Config config) const;
 
   protected Q_SLOTS:
+    void update();
     void updateFrame();
-    void respondFrame();
-    void respondAxis();
+    void respondFrame(int index);
+    void respondAxis(int index);
   protected:
     QComboBox* frame_cbox_;
     QComboBox* axis_cbox_;
     QSlider* jog_slider_;
-    QLCDNumber* pos_x_text_;
-    QLCDNumber* pos_y_text_;
-    QLCDNumber* pos_z_text_;
+    QLineEdit* pos_x_text_;
+    QLineEdit* pos_y_text_;
+    QLineEdit* pos_z_text_;
     std::string frame_id_;
     std::string axis_id_;
     boost::mutex mutex_;
 
     void initFrameComboBox();
     void initAxisComboBox();
+
+    QLineEdit* makeNumericLabel();
+    void fillNumericLabel( QLineEdit* label, double value );
   };
 
 }  // namespace jog_twist
