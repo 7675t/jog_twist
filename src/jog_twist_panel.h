@@ -14,7 +14,7 @@
 
 namespace jog_twist
 {
-  class JogTwistPanel: public rviz::Panel
+class JogTwistPanel: public rviz::Panel
   {
   Q_OBJECT
   public:
@@ -25,8 +25,9 @@ namespace jog_twist
     virtual void save(rviz::Config config) const;
 
   protected Q_SLOTS:
-    void respondFrameSelect();
-    void respondAxisSelect();
+    void updateFrame();
+    void respondFrame();
+    void respondAxis();
   protected:
     QComboBox* frame_cbox_;
     QComboBox* axis_cbox_;
@@ -37,6 +38,9 @@ namespace jog_twist
     std::string frame_id_;
     std::string axis_id_;
     boost::mutex mutex_;
+
+    void initFrameComboBox();
+    void initAxisComboBox();
   };
 
 }  // namespace jog_twist
