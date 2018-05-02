@@ -35,6 +35,8 @@ protected:
 
   TrajClient* traj_client_;
 
+  ros::Publisher traj_pub_;
+
   sensor_msgs::JointState joint_state_;
   geometry_msgs::PoseStamped pose_stamped_;
   sensor_msgs::JointState ref_joint_state_;
