@@ -11,7 +11,11 @@ JogTwistNode::JogTwistNode(std::string move_group_name)
   ik_client_ = nh_.serviceClient<moveit_msgs::GetPositionIK>("/compute_ik");  
   ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 
-  traj_client_ = new TrajClient("position_trajectory_controller/follow_joint_trajectory", true);
+  std::string controller_name;
+  nh_.param<std::string>("controller_name", controller_name, "joint_trajectory_controller");
+  nh_.param<std::string>("target_link", target_link_, "link_6");
+
+  traj_client_ = new TrajClient(controller_name + "/follow_joint_trajectory", true);
 
   while(!traj_client_->waitForServer(ros::Duration(60)))
   {
@@ -27,8 +31,6 @@ JogTwistNode::JogTwistNode(std::string move_group_name)
 void JogTwistNode::cmd_vel_cb(geometry_msgs::TwistStampedConstPtr msg)
 {
   moveit_msgs::GetPositionIK srv;
-  std::vector<std::string> link_name;
-  link_name.push_back("link_j6");
   srv.request.ik_request.group_name = "manipulator";
   srv.request.ik_request.robot_state.joint_state = joint_state_;
   srv.request.ik_request.avoid_collisions = false;
@@ -42,7 +44,10 @@ void JogTwistNode::cmd_vel_cb(geometry_msgs::TwistStampedConstPtr msg)
   ref_pose.pose.position.x = act_pose.position.x + msg->twist.linear.x * dt;
   ref_pose.pose.position.y = act_pose.position.y + msg->twist.linear.y * dt;
   ref_pose.pose.position.z = act_pose.position.z + msg->twist.linear.z * dt;
-  ref_pose.pose.orientation.w = 1;
+  ref_pose.pose.orientation.x = act_pose.orientation.x;
+  ref_pose.pose.orientation.y = act_pose.orientation.y;
+  ref_pose.pose.orientation.z = act_pose.orientation.z;
+  ref_pose.pose.orientation.w = act_pose.orientation.w;
 
   ROS_INFO_STREAM("ref_pose" << ref_pose);
 
@@ -89,7 +94,7 @@ void JogTwistNode::joint_state_cb(sensor_msgs::JointStateConstPtr msg)
 
   moveit_msgs::GetPositionFK srv;
   std::vector<std::string> link_name;
-  link_name.push_back("link_j6");
+  link_name.push_back(target_link_);
   srv.request.fk_link_names = link_name;
   srv.request.robot_state.joint_state = joint_state_;
   if (fk_client_.call(srv))

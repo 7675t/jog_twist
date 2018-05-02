@@ -38,7 +38,8 @@ protected:
   sensor_msgs::JointState joint_state_;
   geometry_msgs::PoseStamped pose_stamped_;
   sensor_msgs::JointState ref_joint_state_;
-  
+
+  std::string target_link_;
 };
 
 } // namespace jog_twist
